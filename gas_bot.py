@@ -126,13 +126,11 @@ def main(source, verbose=False):
                 gweiList = get_gas_from_gasnow(verbose=verbose)
             elif source == 'ethgasstation':
                 gweiList = get_gas_from_ethgasstation(config['ethgasstationKey'])
-                print(gweiList)
                 await send_update(gweiList[0], gweiList[2], gweiList[3])
                 continue
             else:
                 raise NotImplemented('Unsupported source')
             # 4. Feed it to the bot
-            print(gweiList)
             await send_update(*gweiList)
 
     bot.run(config['discordBotKey'])

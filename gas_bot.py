@@ -5,10 +5,16 @@ Run a Discord bot that takes the !gas command and shows the status in an embed +
 # python3 gas_run.py -s etherscan &
 
 from typing import Tuple
+import logging
+import yaml
+import discord
+import asyncio
+from discord.ext.commands import Bot
+import argparse
 
 
 def get_gas_from_etherscan(key: str,
-                           verbose: bool = False) -> Tuple[int]:
+                           verbose: bool = False) -> Tuple[int, int, int]:
     """
     Fetch gas from Etherscan API
     """
@@ -29,7 +35,7 @@ def get_gas_from_etherscan(key: str,
         time.sleep(10)
 
 
-def get_gas_from_gasnow(verbose: bool = False) -> Tuple[int]:
+def get_gas_from_gasnow(verbose: bool = False) -> Tuple[int, int, int]:
     """
     Fetch gas from Gasnow API
     """
@@ -40,7 +46,7 @@ def get_gas_from_gasnow(verbose: bool = False) -> Tuple[int]:
         if verbose:
             print('200 OK')
         data = r.json()['data']
-        return  int(data['fast'] // 1e9), int(data['standard'] // 1e9), int(data['slow'] // 1e9)
+        return int(data['fast'] // 1e9), int(data['standard'] // 1e9), int(data['slow'] // 1e9)
     else:
         if verbose:
             print(r.status_code)
@@ -68,10 +74,6 @@ def get_gas_from_ethgasstation(key: str, verbose: bool = False):
 
 
 def main(source, verbose=False):
-    import yaml
-    import discord
-    import asyncio
-    from discord.ext.commands import Bot
 
     # 1. Instantiate the bot 
     bot = Bot(command_prefix="!")
@@ -80,12 +82,17 @@ def main(source, verbose=False):
     async def gas(ctx):
         embed = discord.Embed(title=":fuelpump: Current gas prices")
         if source == 'ethgasstation':
-            fastest, fast, average, slow, fastestWait, fastWait, avgWait, slowWait = get_gas_from_ethgasstation(config['ethgasstationKey'],
-                                                                    verbose=verbose)
-            embed.add_field(name=f"Slow :turtle: | {slowWait} seconds", value=f"{round(float(slow), 1)} Gwei", inline=False)
-            embed.add_field(name=f"Average :person_walking: | {avgWait} seconds", value=f"{round(float(average), 1)} Gwei", inline=False)
-            embed.add_field(name=f"Fast :race_car: | {fastWait} seconds", value=f"{round(float(fast), 1)} Gwei", inline=False)
-            embed.add_field(name=f"Quick :zap: | {fastestWait} seconds", value=f"{round(float(fastest), 1)} Gwei", inline=False)
+            fastest, fast, average, slow, fastestWait, fastWait, avgWait, slowWait = get_gas_from_ethgasstation(
+                config['ethgasstationKey'],
+                verbose=verbose)
+            embed.add_field(name=f"Slow :turtle: | {slowWait} seconds", value=f"{round(float(slow), 1)} Gwei",
+                            inline=False)
+            embed.add_field(name=f"Average :person_walking: | {avgWait} seconds",
+                            value=f"{round(float(average), 1)} Gwei", inline=False)
+            embed.add_field(name=f"Fast :race_car: | {fastWait} seconds", value=f"{round(float(fast), 1)} Gwei",
+                            inline=False)
+            embed.add_field(name=f"Quick :zap: | {fastestWait} seconds", value=f"{round(float(fastest), 1)} Gwei",
+                            inline=False)
         else:
             if source == 'etherscan':
                 fast, average, slow = get_gas_from_etherscan(config['etherscanKey'], verbose=verbose)
@@ -137,7 +144,11 @@ def main(source, verbose=False):
 
 
 if __name__ == '__main__':
-    import argparse
+    logger = logging.getLogger('discord')
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(handler)
 
     parser = argparse.ArgumentParser()
 

@@ -17,8 +17,8 @@ It also requires an Etherscan API key if you would like to use Etherscan API or 
 
 2. Run a gas price bot using Etherscan API:
 ```
-python gas_run.py -s etherscan
+python gas_bot.py -s ethgasstation
 ```
 Replace `etherscan` with `gasnow` to use Gasnow API (no key required!) or `ethgasstation` to use EthGasStation API.
 
-
+Ethgasstation is the recommended source

@@ -170,7 +170,7 @@ def main(source, verbose=False):
 
     async def send_update(fastest, average, slow, **kw):
         status = f'⚡{fastest} | 🚶{average} | 🐢{slow}'
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing,
                                                             name=status))
         await asyncio.sleep(config['updateFreq'])  # in seconds
 

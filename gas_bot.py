@@ -60,7 +60,7 @@ def get_gas_from_ethgasstation(key: str, verbose: bool = False):
         if verbose:
             print('200 OK')
         data = r.json()
-        return float(data['fastest'] / 10), float(data['fast'] / 10), float(data['average'] / 10), float(
+        return int(data['fastest'] / 10), int(data['fast'] / 10), int(data['average'] / 10), int(
             data['safeLow'] / 10), int(data['fastestWait'] * 60), int(data['fastWait'] * 60), int(
             data['avgWait'] * 60), int(data['safeLowWait'] * 60)
     else:
@@ -169,7 +169,7 @@ def main(source, verbose=False):
         config = yaml.load(f, Loader=yaml.Loader)
 
     async def send_update(fastest, average, slow, **kw):
-        status = f'⚡{fastest} | 🚶{average} | 🐢{slow}'
+        status = f'⚡{fastest} | 🚶{average} | 🐢{slow} | !help'
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing,
                                                             name=status))
         await asyncio.sleep(config['updateFreq'])  # in seconds

@@ -11,9 +11,11 @@ pip install -r requirements.txt
 
 
 ### Gas Price Bot
-1. Configure [config.yaml](config.yaml) using the template provided.
-It requires a unique Discord bot key.
-It also requires an Etherscan API key if you would like to use Etherscan API or an EthGasStation API if you wish to use EthGasStation.
+1. Copy the [template config](config.yaml.tmpl) and configure with API keys.
+```
+cp config.yaml.tmpl config.yaml
+```
+Change config.yaml with the Discord bot key and Etherscan, EthGasStation, or Gasnow API keys.
 
 2. Run a gas price bot using Etherscan API:
 ```

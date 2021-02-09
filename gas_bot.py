@@ -169,9 +169,14 @@ def main(source, verbose=False):
         config = yaml.load(f, Loader=yaml.Loader)
 
     async def send_update(fastest, average, slow, **kw):
-        status = f'⚡{fastest} | 🚶{average} | 🐢{slow} | !help'
+        status = f'⚡{fastest} |🐢{slow} | !help'
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing,
                                                             name=status))
+
+        for guild in bot.guilds:
+            guser = guild.get_member(bot.user.id);
+            await guser.edit(nick=f'Gas: 🚶{average}');
+
         await asyncio.sleep(config['updateFreq'])  # in seconds
 
     @bot.event

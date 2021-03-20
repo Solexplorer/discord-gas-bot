@@ -71,7 +71,8 @@ def get_gas_from_ethgasstation(key: str, verbose: bool = False):
 
 def main(source, verbose=False):
     # 1. Instantiate the bot
-    bot = Bot(command_prefix="!", help_command=None)
+    # Allow the command prefix to be either ! or %
+    bot = Bot(command_prefix=('!', '%'), help_command=None)
 
     @bot.command(pass_context=True, brief="Get ETH gas prices")
     async def gas(ctx):
@@ -106,7 +107,7 @@ def main(source, verbose=False):
     @bot.command(pass_context=True, brief="Get the cost for each tx type")
     async def fees(ctx):
         calculate_eth_tx = lambda gwei, limit: round(gwei * limit * 0.000000001, 4)
-        fast = get_gas_from_gasnow(verbose=verbose)[0]
+        fast, standard, slow = get_gas_from_gasnow(verbose=verbose)
         eth_price = \
             requests.get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd').json()[
                 'ethereum'][
@@ -121,9 +122,10 @@ def main(source, verbose=False):
         range1_uniswap_usd = round(range1_uniswap_eth * eth_price, 2)
         range2_uniswap_eth = calculate_eth_tx(fast, 200000)
         range2_uniswap_usd = round(range2_uniswap_eth * eth_price, 2)
-        fees_eth = f"Simple ETH TX: **{simple_tx_fee_usd}$** ({simple_tx_fee_eth} Ξ)\n" \
-                   f"Token Approval (ERC20): **{token_approve_usd}$** ({token_approve_eth} Ξ)\n" \
-                   f"Token Transfer (ERC20): **{token_transfer_usd}$** ({token_transfer_eth} Ξ)\n" \
+        fees_eth = f"**Fast: {fast}** **Standard: {standard}** **Slow: {slow}**\n"\
+                   f"Simple ETH TX: **${simple_tx_fee_usd}** ({simple_tx_fee_eth} Ξ)\n" \
+                   f"Token Approval (ERC20): **${token_approve_usd}** ({token_approve_eth} Ξ)\n" \
+                   f"Token Transfer (ERC20): **${token_transfer_usd}** ({token_transfer_eth} Ξ)\n" \
                    f"Uniswap Trades: **${range1_uniswap_usd} - ${range2_uniswap_usd}** ({range1_uniswap_eth} Ξ - {range2_uniswap_eth} Ξ)\n"
 
         await ctx.send(fees_eth)
@@ -186,19 +188,23 @@ def main(source, verbose=False):
         """
         while True:
             # 3. Fetch gas
-            if source == 'etherscan':
-                gweiList = get_gas_from_etherscan(config['etherscanKey'],
-                                                  verbose=verbose)
-            elif source == 'gasnow':
-                gweiList = get_gas_from_gasnow(verbose=verbose)
-            elif source == 'ethgasstation':
-                gweiList = get_gas_from_ethgasstation(config['ethgasstationKey'])
-                await send_update(gweiList[0], gweiList[2], gweiList[3])
+            try:
+                if source == 'etherscan':
+                    gweiList = get_gas_from_etherscan(config['etherscanKey'],
+                                                      verbose=verbose)
+                elif source == 'gasnow':
+                    gweiList = get_gas_from_gasnow(verbose=verbose)
+                elif source == 'ethgasstation':
+                    gweiList = get_gas_from_ethgasstation(config['ethgasstationKey'])
+                    await send_update(gweiList[0], gweiList[2], gweiList[3])
+                    continue
+                else:
+                    raise NotImplemented('Unsupported source')
+                # 4. Feed it to the bot
+                await send_update(*gweiList)
+            except Exception as exc:
+                logger.error(exc)
                 continue
-            else:
-                raise NotImplemented('Unsupported source')
-            # 4. Feed it to the bot
-            await send_update(*gweiList)
 
     bot.run(config['discordBotKey'])
 
